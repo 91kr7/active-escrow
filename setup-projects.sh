@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Vai alla root del progetto
-BASE_DIR="/Users/christianmariani/IdeaProjects/me/escrow"
+BASE_DIR="$(pwd)"
 cd "$BASE_DIR" || exit
 
 echo "--------------------------------------------------------"
