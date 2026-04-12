@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.escrow.mock</groupId>
-    <artifactId>consumer-app</artifactId>
+    <artifactId>mockapp</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>consumer-app</name>
-    <description>Active Escrow Consumer Mock</description>
+    <name>mockapp</name>
+    <description>Mock</description>
     <properties>
         <java.version>17</java.version>
     </properties>

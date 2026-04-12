@@ -1,7 +1,6 @@
 # Source Repository Pipeline
 stages:
   - build_and_deploy
-  - run_consumer
   - notify_escrow
 
 variables:
@@ -18,23 +17,6 @@ build_job:
     paths:
       - target/*.jar
 
-run_consumer_job:
-  stage: run_consumer
-  image: docker:dind
-  script: |
-    echo "Building and starting containerized Consumer App..."
-    docker build -t escrow-consumer .
-    
-    # Rimuoviamo eventuale container vecchio
-    docker rm -f escrow-consumer || true
-    
-    # Avviamo il container in background che si aggancerà a RabbitMQ e aspetta messaggi.
-    # Usa the escrow-net per parlare col broker.
-    # Passiamo le credenziali necessarie (il container si auto-registra a RabbitMQ)
-    docker run -d --name escrow-consumer --network escrow-net escrow-consumer
-    echo "Consumer App Container started successfully."
-  needs: ["build_job"]
-
 notify_job:
   stage: notify_escrow
   image: curlimages/curl
@@ -48,12 +30,10 @@ notify_job:
       "buildVariables": {
         "CI_PIPELINE_ID": "${CI_PIPELINE_ID}"
       }
-    }
-    PAYLOAD_EOF
-    )
+    }PAYLOAD_EOF)
     curl -u guest:guest \
       -H "content-type:application/json" \
       -X POST -d '{"properties":{},"routing_key":"build.queue","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \
       http://escrow-rabbitmq:15672/api/exchanges/%2f/amq.default/publish
     echo "Message sent to RabbitMQ successfully."
-  needs: ["run_consumer_job"]
+  needs: ["build_job"]
