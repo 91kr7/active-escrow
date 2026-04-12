@@ -23,7 +23,7 @@ docker exec -i gitlab-runner-source gitlab-runner register \
   --token "$SRC_TOKEN" \
   --executor "docker" \
   --docker-image "maven:3.9.6-eclipse-temurin-17" \
-  --docker-network-mode "escrow_escrow-net"
+  --docker-network-mode "active-escrow_escrow-net"
 
 echo "--------------------------------------------------------"
 echo "⏳ Creazione e registrazione del Runner su GitLab Escrow..."
@@ -37,7 +37,7 @@ docker exec -i gitlab-runner-escrow gitlab-runner register \
   --token "$ESC_TOKEN" \
   --executor "docker" \
   --docker-image "maven:3.9.6-eclipse-temurin-17" \
-  --docker-network-mode "escrow_escrow-net"
+  --docker-network-mode "active-escrow_escrow-net"
 
 echo "--------------------------------------------------------"
 echo "✅ Entrambi i Runner sono ora registrati e agganciati ai due GitLab perfettamente!"

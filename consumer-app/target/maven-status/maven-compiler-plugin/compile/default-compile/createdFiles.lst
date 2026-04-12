@@ -1,0 +1,6 @@
+com/escrow/mock/listener/QueueListener.class
+com/escrow/mock/ConsumerApplication.class
+com/escrow/mock/model/BuildPayload.class
+com/escrow/mock/config/RabbitMQConfig.class
+com/escrow/mock/service/GitLabService.class
+com/escrow/mock/controller/QueueController.class

@@ -1,0 +1,6 @@
+/Users/christianmariani/IdeaProjects/me/escrow/consumer-app/src/main/java/com/escrow/mock/ConsumerApplication.java
+/Users/christianmariani/IdeaProjects/me/escrow/consumer-app/src/main/java/com/escrow/mock/model/BuildPayload.java
+/Users/christianmariani/IdeaProjects/me/escrow/consumer-app/src/main/java/com/escrow/mock/service/GitLabService.java
+/Users/christianmariani/IdeaProjects/me/escrow/consumer-app/src/main/java/com/escrow/mock/listener/QueueListener.java
+/Users/christianmariani/IdeaProjects/me/escrow/consumer-app/src/main/java/com/escrow/mock/controller/QueueController.java
+/Users/christianmariani/IdeaProjects/me/escrow/consumer-app/src/main/java/com/escrow/mock/config/RabbitMQConfig.java

@@ -8,10 +8,10 @@ echo "--------------------------------------------------------"
 echo "⏳ Creazione progetti su GitLab tramite Rails Console..."
 echo "--------------------------------------------------------"
 
-# Crea source-repo e provider-sync-repo su GitLab Source (-i = pass into stdin)
+# Crea source-repo, provider-sync-repo e consumer-app su GitLab Source (-i = pass into stdin)
 docker exec -i gitlab-source gitlab-rails runner "
 root = User.find_by_username('root')
-['source-repo', 'provider-sync-repo'].each do |repo_name|
+['source-repo', 'provider-sync-repo', 'consumer-app'].each do |repo_name|
   unless Project.find_by_path(repo_name)
     Project.create!(name: repo_name, path: repo_name, namespace: root.namespace, creator: root)
     puts %Q(-> Creato progetto #{repo_name} su GitLab Source)
@@ -67,9 +67,10 @@ push_repo() {
   fi
 }
 
-# Invoca la funzione per i 3 repositori
+# Invoca la funzione per i 4 repositori
 push_repo "$BASE_DIR/source-repo" "source-repo" "8081"
 push_repo "$BASE_DIR/provider-sync-repo" "provider-sync-repo" "8081"
+push_repo "$BASE_DIR/consumer-app" "consumer-app" "8081"
 push_repo "$BASE_DIR/escrow-repo" "escrow-repo" "8082"
 
 echo "--------------------------------------------------------"

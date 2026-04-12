@@ -1,11 +1,11 @@
 #!/bin/bash
 
-BASE_DIR="/Users/christianmariani/IdeaProjects/me/escrow"
+BASE_DIR="$(pwd)"
 cd "$BASE_DIR" || exit
 
 echo "🚀 Avvio i container dell'ambiente Mock Escrow..."
 # Usa docker-compose o docker compose a seconda della versione. Usiamo "docker compose" che ormai è standard.
-docker compose up -d
+docker-compose up -d
 
 echo ""
 echo "⏳ Attendo l'inizializzazione dei servizi web di GitLab."

@@ -1,0 +1,20 @@
+spring:
+  rabbitmq:
+    host: escrow-rabbitmq
+    port: 5672
+    listener:
+      simple:
+        concurrency: 1
+        max-concurrency: 1
+        prefetch: 1
+        auto-startup: true
+        missing-queues-fatal: false
+server:
+  port: 8080
+
+escrow:
+  provider:
+    url: "http://gitlab-source.local" # We host the provider pipeline on the source gitlab to mock the provider environment runner
+    token: "Glpat-SourceToken"
+    projectId: "provider-sync-repo" # Name of the repo serving as the alignment pipeline
+  queueName: "build.success.queue"

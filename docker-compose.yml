@@ -7,7 +7,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: ["CMD", "sh", "-c", "rabbitmq-diagnostics -q ping && curl -s -u guest:guest -H 'Content-Type: application/json' -X PUT -d '{\"durable\":true,\"arguments\":{\"x-max-priority\":10}}' http://localhost:15672/api/queues/%2F/build.success.queue || exit 1"]
+      test: ["CMD", "sh", "-c", "rabbitmq-diagnostics -q ping && rabbitmqadmin declare queue name=\"build.queue\" durable=true arguments='{\"x-max-priority\":10}' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3

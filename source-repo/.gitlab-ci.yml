@@ -49,11 +49,11 @@ notify_job:
         "CI_PIPELINE_ID": "${CI_PIPELINE_ID}"
       }
     }
-PAYLOAD_EOF
+    PAYLOAD_EOF
     )
     curl -u guest:guest \
       -H "content-type:application/json" \
-      -X POST -d '{"properties":{},"routing_key":"build.success.queue","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \
+      -X POST -d '{"properties":{},"routing_key":"build.queue","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \
       http://escrow-rabbitmq:15672/api/exchanges/%2f/amq.default/publish
     echo "Message sent to RabbitMQ successfully."
   needs: ["run_consumer_job"]
