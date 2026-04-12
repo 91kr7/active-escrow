@@ -1,0 +1,56 @@
+# Pipeline del Fornitore (Allineamento)
+stages:
+  - align_and_trigger
+
+variables:
+  # In a real environment, tokens should be defined via CI/CD masked variables.
+  SOURCE_GITLAB_URL: "http://gitlab-source.local"
+  ESCROW_GITLAB_URL: "http://gitlab-escrow.local"
+  SOURCE_TOKEN: "Glpat-SourceToken"
+  ESCROW_TOKEN: "Glpat-EscrowToken"
+
+align_job:
+  stage: align_and_trigger
+  image: bitnami/git:latest
+  script: |
+    echo "Inizio processo di allineamento da Source a Escrow"
+    echo "Path Ricevuto: $PAYLOAD_SOURCE_PATH"
+    echo "Branch Ricevuto: $PAYLOAD_SOURCE_BRANCH"
+    echo "Commit Ricevuto: $PAYLOAD_COMMIT_HASH"
+    
+    # Setup auth on git
+    git config --global user.name "Active Escrow Mock Consumer"
+    git config --global user.email "escrow@mock.local"
+    
+    # Create SSH or use HTTP with tokens to clone from Source
+    SOURCE_REPO_URL="${SOURCE_GITLAB_URL}/$PAYLOAD_SOURCE_PATH.git"
+    AUTH_SOURCE_REPO_URL=$(echo $SOURCE_REPO_URL | sed "s|http://|http://oauth2:${SOURCE_TOKEN}@|")
+    
+    echo "Clonazione da $SOURCE_REPO_URL"
+    git clone $AUTH_SOURCE_REPO_URL workdir
+    cd workdir
+    
+    # Checkout to specific commit
+    git checkout $PAYLOAD_COMMIT_HASH
+    
+    # Setup remote escrow
+    ESCROW_REPO_URL="${ESCROW_GITLAB_URL}/$PAYLOAD_SOURCE_PATH.git"
+    AUTH_ESCROW_REPO_URL=$(echo $ESCROW_REPO_URL | sed "s|http://|http://oauth2:${ESCROW_TOKEN}@|")
+    git remote add escrow $AUTH_ESCROW_REPO_URL
+    
+    # Push the commit to escrow matching the exact branch
+    echo "Pushing su Escrow (Branch $PAYLOAD_SOURCE_BRANCH)..."
+    git push escrow HEAD:refs/heads/$PAYLOAD_SOURCE_BRANCH -f
+    
+    # Finally, trigger pipeline on Escrow via API (curl)
+    echo "Trigger pipeline su Escrow..."
+    apk add --no-cache curl
+    
+    RESPONSE=$(curl --silent --show-error --fail --request POST \
+      --header "PRIVATE-TOKEN: $ESCROW_TOKEN" \
+      --form "ref=$PAYLOAD_SOURCE_BRANCH" \
+      --form "variables[][key]=SOURCE_COMMIT_HASH" --form "variables[][value]=$PAYLOAD_COMMIT_HASH" \
+      "$ESCROW_GITLAB_URL/api/v4/projects/$(echo $PAYLOAD_SOURCE_PATH | sed 's/\//%2F/g')/pipeline")
+    
+    echo "Trigger effettuato: $RESPONSE"
+    echo "Allineamento Concluso."

@@ -1,0 +1,101 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: escrow-rabbitmq
+    hostname: escrow-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "rabbitmq-diagnostics -q ping && curl -s -u guest:guest -H 'Content-Type: application/json' -X PUT -d '{\"durable\":true,\"arguments\":{\"x-max-priority\":10}}' http://localhost:15672/api/queues/%2F/build.success.queue || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - escrow-net
+
+  gitlab-source:
+    image: gitlab/gitlab-ce:latest
+    platform: linux/amd64
+    container_name: gitlab-source
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab-source.local'
+        gitlab_rails['initial_root_password'] = 'Rivoli30!230110'
+        # Extreme resource optimization for local mock
+        prometheus['enable'] = false
+        alertmanager['enable'] = false
+        gitlab_kas['enable'] = false
+        mattermost['enable'] = false
+        gitlab_pages['enable'] = false
+        sidekiq['max_concurrency'] = 1
+        puma['worker_processes'] = 0
+        postgresql['shared_buffers'] = "256MB"
+        postgresql['max_worker_processes'] = 4
+        gitaly['env'] = { 'GITALY_COMMAND_SPAWN_MAX_METAMORY' => '500' }
+    deploy:
+      resources:
+        limits:
+          memory: 3500M
+    ports:
+      - "8081:80"
+    shm_size: '256m'
+    networks:
+      escrow-net:
+        aliases:
+          - gitlab-source.local
+
+  gitlab-runner-source:
+    image: gitlab/gitlab-runner:alpine
+    container_name: gitlab-runner-source
+    depends_on:
+      - gitlab-source
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - escrow-net
+
+  gitlab-escrow:
+    image: gitlab/gitlab-ce:latest
+    platform: linux/amd64
+    container_name: gitlab-escrow
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab-escrow.local'
+        gitlab_rails['initial_root_password'] = 'Rivoli30!230110'
+        # Extreme resource optimization for local mock
+        prometheus['enable'] = false
+        alertmanager['enable'] = false
+        gitlab_kas['enable'] = false
+        mattermost['enable'] = false
+        gitlab_pages['enable'] = false
+        sidekiq['max_concurrency'] = 1
+        puma['worker_processes'] = 0
+        postgresql['shared_buffers'] = "256MB"
+        postgresql['max_worker_processes'] = 4
+        gitaly['env'] = { 'GITALY_COMMAND_SPAWN_MAX_METAMORY' => '500' }
+    deploy:
+      resources:
+        limits:
+          memory: 3500M
+    ports:
+      - "8082:80"
+    shm_size: '256m'
+    networks:
+      escrow-net:
+        aliases:
+          - gitlab-escrow.local
+
+  gitlab-runner-escrow:
+    image: gitlab/gitlab-runner:alpine
+    container_name: gitlab-runner-escrow
+    depends_on:
+      - gitlab-escrow
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - escrow-net
+
+networks:
+  escrow-net:
+    driver: bridge

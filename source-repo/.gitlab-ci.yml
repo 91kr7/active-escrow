@@ -1,0 +1,59 @@
+# Source Repository Pipeline
+stages:
+  - build_and_deploy
+  - run_consumer
+  - notify_escrow
+
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode"
+
+build_job:
+  stage: build_and_deploy
+  image: maven:3.9.6-eclipse-temurin-17
+  script: |
+    echo "Compiling Consumer App..."
+    ./mvnw clean package -DskipTests
+    echo "Build successful."
+  artifacts:
+    paths:
+      - target/*.jar
+
+run_consumer_job:
+  stage: run_consumer
+  image: docker:dind
+  script: |
+    echo "Building and starting containerized Consumer App..."
+    docker build -t escrow-consumer .
+    
+    # Rimuoviamo eventuale container vecchio
+    docker rm -f escrow-consumer || true
+    
+    # Avviamo il container in background che si aggancerà a RabbitMQ e aspetta messaggi.
+    # Usa the escrow-net per parlare col broker.
+    # Passiamo le credenziali necessarie (il container si auto-registra a RabbitMQ)
+    docker run -d --name escrow-consumer --network escrow-net escrow-consumer
+    echo "Consumer App Container started successfully."
+  needs: ["build_job"]
+
+notify_job:
+  stage: notify_escrow
+  image: curlimages/curl
+  script: |
+    echo "Simulating notifying RabbitMQ..."
+    PAYLOAD=$(cat <<PAYLOAD_EOF
+    {
+      "relativePath": "${CI_PROJECT_PATH}",
+      "branch": "${CI_COMMIT_REF_NAME}",
+      "commitHash": "${CI_COMMIT_SHA}",
+      "buildVariables": {
+        "CI_PIPELINE_ID": "${CI_PIPELINE_ID}"
+      }
+    }
+PAYLOAD_EOF
+    )
+    curl -u guest:guest \
+      -H "content-type:application/json" \
+      -X POST -d '{"properties":{},"routing_key":"build.success.queue","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \
+      http://escrow-rabbitmq:15672/api/exchanges/%2f/amq.default/publish
+    echo "Message sent to RabbitMQ successfully."
+  needs: ["run_consumer_job"]

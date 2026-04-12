@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Vai alla root del progetto
+BASE_DIR="/Users/christianmariani/IdeaProjects/me/escrow"
+cd "$BASE_DIR" || exit
+
+echo "--------------------------------------------------------"
+echo "⏳ Creazione progetti su GitLab tramite Rails Console..."
+echo "--------------------------------------------------------"
+
+# Crea source-repo e provider-sync-repo su GitLab Source (-i = pass into stdin)
+docker exec -i gitlab-source gitlab-rails runner "
+root = User.find_by_username('root')
+['source-repo', 'provider-sync-repo'].each do |repo_name|
+  unless Project.find_by_path(repo_name)
+    Project.create!(name: repo_name, path: repo_name, namespace: root.namespace, creator: root)
+    puts %Q(-> Creato progetto #{repo_name} su GitLab Source)
+  else
+    puts %Q(-> Progetto #{repo_name} esiste già su GitLab Source)
+  end
+end
+"
+
+# Crea escrow-repo su GitLab Escrow
+docker exec -i gitlab-escrow gitlab-rails runner "
+root = User.find_by_username('root')
+['escrow-repo'].each do |repo_name|
+  unless Project.find_by_path(repo_name)
+    Project.create!(name: repo_name, path: repo_name, namespace: root.namespace, creator: root)
+    puts %Q(-> Creato progetto #{repo_name} su GitLab Escrow)
+  else
+    puts %Q(-> Progetto #{repo_name} esiste già su GitLab Escrow)
+  end
+end
+"
+
+echo "--------------------------------------------------------"
+echo "⬆️ Inizializzazione Git locale e push sui container..."
+echo "--------------------------------------------------------"
+
+# Funzione veloce per il push
+push_repo() {
+  REPO_DIR=$1
+  REPO_NAME=$2
+  PORT=$3
+  
+  if [ -d "$REPO_DIR" ]; then
+    echo "📍 Pushing $REPO_NAME to GitLab instance port $PORT..."
+    cd "$REPO_DIR" || return
+    # Pulisce vecchi riferimenti git locale per partire puliti
+    rm -rf .git
+    git init --quiet
+    git add .
+    git commit --quiet -m "Initial automated commit for $REPO_NAME"
+    git branch -M main
+    
+    # Rimuovi eventuali origin precedenti e piazza quello col login e l'apice escapato per via del ! nella pw
+    git remote remove origin 2>/dev/null
+    git remote add origin "http://root:Rivoli30!230110@127.0.0.1:$PORT/root/$REPO_NAME.git"
+    
+    # Push su gitlab (quiet per evitare la valanga di logs, -u force)
+    git push -u origin main
+    echo "✅ Successo: $REPO_NAME è su http://127.0.0.1:$PORT/root/$REPO_NAME"
+    cd "$BASE_DIR" || return
+  else
+    echo "⚠️ Directory $REPO_DIR non trovata, impossibile pushare."
+  fi
+}
+
+# Invoca la funzione per i 3 repositori
+push_repo "$BASE_DIR/source-repo" "source-repo" "8081"
+push_repo "$BASE_DIR/provider-sync-repo" "provider-sync-repo" "8081"
+push_repo "$BASE_DIR/escrow-repo" "escrow-repo" "8082"
+
+echo "--------------------------------------------------------"
+echo "🎉 Tutti i backend GitLab sono inizializzati!"
+echo "--------------------------------------------------------"
