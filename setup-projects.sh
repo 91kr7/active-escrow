@@ -91,11 +91,9 @@ push_repo() {
   fi
 }
 
-# Invoca la funzione per i 4 repositori
 push_repo "$BASE_DIR/source-repo" "source-repo" "8081"
 push_repo "$BASE_DIR/provider-sync-repo" "provider-sync-repo" "8081"
 push_repo "$BASE_DIR/consumer-app" "consumer-app" "8081"
-push_repo "$BASE_DIR/escrow-repo" "escrow-repo" "8082"
 
 echo "--------------------------------------------------------"
 echo "🎉 Tutti i backend GitLab sono inizializzati!"
