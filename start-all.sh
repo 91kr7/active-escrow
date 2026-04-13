@@ -35,7 +35,6 @@ echo ""
 echo "📦 Setup dei Repository e push automatico..."
 chmod +x setup-projects.sh
 ./setup-projects.sh
-./setup-projects.sh
 
 echo ""
 echo "🏃‍♂️ Creazione Runner e aggancio a GitLab..."

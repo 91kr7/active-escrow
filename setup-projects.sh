@@ -16,40 +16,22 @@ root = User.find_by_username('root')
     Project.create!(name: repo_name, path: repo_name, namespace: root.namespace, creator: root)
     puts %Q(-> Creato progetto #{repo_name} su GitLab Source)
   else
-    puts %Q(-> Progetto #{repo_name} esiste già su GitLab Source)
+    puts %Q(-> Progetto #{repo_name} esiste gia su GitLab Source)
   end
 end
-
-puts '⏳ Impostazione Personal Access Token (Glpat-SourceToken)...'
-token = root.personal_access_tokens.find_or_initialize_by(name: 'mock')
-token.scopes = ['api', 'read_repository', 'write_repository']
-token.expires_at = 1.year.from_now
-token.revoked = false if token.respond_to?(:revoked=)
-token.set_token('Glpat-SourceToken')
-token.save!
-puts '-> Token impostato con successo su GitLab Source'
 "
 
 # Crea escrow-repo su GitLab Escrow
 docker exec -i gitlab-escrow gitlab-rails runner "
 root = User.find_by_username('root')
-['escrow-repo'].each do |repo_name|
+['source-repo'].each do |repo_name|
   unless Project.find_by_path(repo_name)
     Project.create!(name: repo_name, path: repo_name, namespace: root.namespace, creator: root)
     puts %Q(-> Creato progetto #{repo_name} su GitLab Escrow)
   else
-    puts %Q(-> Progetto #{repo_name} esiste già su GitLab Escrow)
+    puts %Q(-> Progetto #{repo_name} esiste gia su GitLab Escrow)
   end
 end
-
-puts '⏳ Impostazione Personal Access Token (Glpat-EscrowToken)...'
-token = root.personal_access_tokens.find_or_initialize_by(name: 'mock')
-token.scopes = ['api', 'read_repository', 'write_repository']
-token.expires_at = 1.year.from_now
-token.revoked = false if token.respond_to?(:revoked=)
-token.set_token('Glpat-EscrowToken')
-token.save!
-puts '-> Token impostato con successo su GitLab Escrow'
 "
 
 echo "--------------------------------------------------------"
@@ -91,6 +73,32 @@ push_repo() {
 push_repo "$BASE_DIR/source-repo" "source-repo" "8081"
 push_repo "$BASE_DIR/provider-sync-repo" "provider-sync-repo" "8081"
 push_repo "$BASE_DIR/consumer-app" "consumer-app" "8081"
+
+echo "--------------------------------------------------------"
+echo "🔑 Rigenerazione Token (dopo la creazione dei progetti e il push)..."
+echo "--------------------------------------------------------"
+
+docker exec -i gitlab-source gitlab-rails runner "
+root = User.find_by_username('root')
+token = root.personal_access_tokens.find_or_initialize_by(name: 'mock')
+token.scopes = ['api', 'read_repository', 'write_repository']
+token.expires_at = 1.year.from_now
+token.revoked = false if token.respond_to?(:revoked=)
+token.set_token('Glpat-SourceToken')
+token.save!
+puts '-> Token rigenerato con successo su GitLab Source'
+"
+
+docker exec -i gitlab-escrow gitlab-rails runner "
+root = User.find_by_username('root')
+token = root.personal_access_tokens.find_or_initialize_by(name: 'mock')
+token.scopes = ['api', 'read_repository', 'write_repository']
+token.expires_at = 1.year.from_now
+token.revoked = false if token.respond_to?(:revoked=)
+token.set_token('Glpat-EscrowToken')
+token.save!
+puts '-> Token rigenerato con successo su GitLab Escrow'
+"
 
 echo "--------------------------------------------------------"
 echo "🎉 Tutti i backend GitLab sono inizializzati!"
