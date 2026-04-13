@@ -43,6 +43,13 @@ align_job:
     echo "Pushing su Escrow (Branch $PAYLOAD_SOURCE_BRANCH)..."
     git push escrow HEAD:refs/heads/$PAYLOAD_SOURCE_BRANCH -f
     
+    # Configura il progetto su Escrow per utilizzare .gitlab-ci-escrow.yml
+    echo "Configurazione progetto Escrow per utilizzare .gitlab-ci-escrow.yml..."
+    curl --silent --show-error --request PUT \
+      --header "PRIVATE-TOKEN: $ESCROW_TOKEN" \
+      --form "ci_config_path=.gitlab-ci-escrow.yml" \
+      "$ESCROW_GITLAB_URL/api/v4/projects/$(echo $PAYLOAD_SOURCE_PATH | sed 's/\//%2F/g')"
+    
     # Finally, trigger pipeline on Escrow via API (curl)
     echo "Trigger pipeline su Escrow..."
     

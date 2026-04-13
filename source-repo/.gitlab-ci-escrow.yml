@@ -1,0 +1,18 @@
+# Source Repository Pipeline
+stages:
+  - build_and_deploy
+  - notify_escrow
+
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode"
+
+build_job:
+  stage: build_and_deploy
+  image: maven:3.9.6-eclipse-temurin-17
+  script: |
+    echo "Compiling Consumer App..."
+    mvn clean package -DskipTests
+    echo "Build successful."
+  artifacts:
+    paths:
+      - target/*.jar
