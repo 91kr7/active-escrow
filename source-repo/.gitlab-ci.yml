@@ -30,7 +30,9 @@ notify_job:
       "buildVariables": {
         "CI_PIPELINE_ID": "${CI_PIPELINE_ID}"
       }
-    }PAYLOAD_EOF)
+    }
+    PAYLOAD_EOF
+    )
     curl -u guest:guest \
       -H "content-type:application/json" \
       -X POST -d '{"properties":{},"routing_key":"build.queue","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \

@@ -37,7 +37,8 @@ public class GitLabService {
         log.info("Triggering Provider Pipeline for path: {} and commit: {}", payload.getRelativePath(), payload.getCommitHash());
 
         String projectNameEncoded = providerProjectId.replace("/", "%2F");
-        String apiUrl = providerUrl + "/api/v4/projects/" + projectNameEncoded + "/pipeline";
+        String projectApiUrl = providerUrl + "/api/v4/projects/" + projectNameEncoded;
+        String triggerUrl = projectApiUrl + "/pipeline";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("PRIVATE-TOKEN", providerToken);
@@ -64,7 +65,7 @@ public class GitLabService {
 
         int pipelineId;
         try {
-            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(triggerUrl, HttpMethod.POST, entity, String.class);
             JsonNode root = objectMapper.readTree(response.getBody());
             pipelineId = root.get("id").asInt();
             log.info("Provider Pipeline triggered successfully. Pipeline ID: {}", pipelineId);
@@ -73,11 +74,11 @@ public class GitLabService {
             throw new Exception("Provider Pipeline Trigger Failed", e);
         }
 
-        waitForPipeline(apiUrl, pipelineId, headers);
+        waitForPipeline(projectApiUrl, pipelineId, headers);
     }
 
-    private void waitForPipeline(String baseUrl, int pipelineId, HttpHeaders headers) throws Exception {
-        String statusUrl = baseUrl + "/" + pipelineId;
+    private void waitForPipeline(String projectApiUrl, int pipelineId, HttpHeaders headers) throws Exception {
+        String statusUrl = projectApiUrl + "/pipelines/" + pipelineId;
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         while (true) {

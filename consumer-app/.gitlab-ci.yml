@@ -14,7 +14,7 @@ build:
 
 run-consumer:
   stage: run
-  image: eclipse-temurin:17-jre-alpine
+  image: eclipse-temurin:17-jre
   script:
     - echo "🚀 Starting Consumer App..."
     - java -jar target/consumer-app-0.0.1-SNAPSHOT.jar
