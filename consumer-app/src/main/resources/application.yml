@@ -4,8 +4,8 @@ spring:
     port: 5672
     listener:
       simple:
-        concurrency: 5
-        max-concurrency: 5
+        concurrency: 1
+        max-concurrency: 1
         prefetch: 1
         auto-startup: true
         missing-queues-fatal: false
