@@ -16,5 +16,5 @@ escrow:
   provider:
     url: "http://gitlab-source.local" # We host the provider pipeline on the source gitlab to mock the provider environment runner
     token: "Glpat-SourceToken"
-    projectId: "root/provider-sync-repo" # Name of the repo serving as the alignment pipeline
+    projectId: "2" # Name of the repo serving as the alignment pipeline
   queueName: "build.queue"

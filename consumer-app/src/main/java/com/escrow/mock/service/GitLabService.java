@@ -34,7 +34,7 @@ public class GitLabService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public void triggerProviderPipelineAndWait(BuildPayload payload) throws Exception {
-        log.info("Triggering Provider Pipeline for path: {} and commit: {}", payload.getRelativePath(), payload.getCommitHash());
+        log.info("Triggering Provider Pipeline {} for path: {} and commit: {}", providerProjectId, payload.getRelativePath(), payload.getCommitHash());
 
         String projectNameEncoded = providerProjectId.replace("/", "%2F");
         String projectApiUrl = providerUrl + "/api/v4/projects/" + projectNameEncoded;
