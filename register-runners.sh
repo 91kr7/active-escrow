@@ -7,6 +7,12 @@
 # Numero massimo di job concorrenti per ciascun runner
 MAX_CONCURRENT_JOBS=5
 
+set_global_runner_concurrency() {
+  local container_name="$1"
+  local max_jobs="$2"
+  docker exec -i "$container_name" sh -lc "sed -i 's/^concurrent = .*/concurrent = ${max_jobs}/' /etc/gitlab-runner/config.toml"
+}
+
 echo "--------------------------------------------------------"
 echo "⏳ Creazione e registrazione del Runner su GitLab Source..."
 echo "--------------------------------------------------------"
@@ -29,6 +35,8 @@ docker exec -i gitlab-runner-source gitlab-runner register \
   --docker-network-mode "active-escrow_escrow-net" \
   --limit "$MAX_CONCURRENT_JOBS"
 
+set_global_runner_concurrency "gitlab-runner-source" "$MAX_CONCURRENT_JOBS"
+
 echo "--------------------------------------------------------"
 echo "⏳ Creazione e registrazione del Runner su GitLab Escrow..."
 echo "--------------------------------------------------------"
@@ -43,6 +51,11 @@ docker exec -i gitlab-runner-escrow gitlab-runner register \
   --docker-image "maven:3.9.6-eclipse-temurin-17" \
   --docker-network-mode "active-escrow_escrow-net" \
   --limit "$MAX_CONCURRENT_JOBS"
+
+set_global_runner_concurrency "gitlab-runner-escrow" "$MAX_CONCURRENT_JOBS"
+
+docker restart gitlab-runner-source >/dev/null
+docker restart gitlab-runner-escrow >/dev/null
 
 echo "--------------------------------------------------------"
 echo "✅ Entrambi i Runner sono ora registrati e agganciati ai due GitLab perfettamente!"
