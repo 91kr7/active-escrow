@@ -4,6 +4,9 @@
 # con GitLab tramite i DNS interni di Docker (bypassando l'host Mac)
 ######################################################################
 
+# Numero massimo di job concorrenti per ciascun runner
+MAX_CONCURRENT_JOBS=5
+
 echo "--------------------------------------------------------"
 echo "⏳ Creazione e registrazione del Runner su GitLab Source..."
 echo "--------------------------------------------------------"
@@ -23,7 +26,8 @@ docker exec -i gitlab-runner-source gitlab-runner register \
   --token "$SRC_TOKEN" \
   --executor "docker" \
   --docker-image "maven:3.9.6-eclipse-temurin-17" \
-  --docker-network-mode "active-escrow_escrow-net"
+  --docker-network-mode "active-escrow_escrow-net" \
+  --limit "$MAX_CONCURRENT_JOBS"
 
 echo "--------------------------------------------------------"
 echo "⏳ Creazione e registrazione del Runner su GitLab Escrow..."
@@ -37,7 +41,8 @@ docker exec -i gitlab-runner-escrow gitlab-runner register \
   --token "$ESC_TOKEN" \
   --executor "docker" \
   --docker-image "maven:3.9.6-eclipse-temurin-17" \
-  --docker-network-mode "active-escrow_escrow-net"
+  --docker-network-mode "active-escrow_escrow-net" \
+  --limit "$MAX_CONCURRENT_JOBS"
 
 echo "--------------------------------------------------------"
 echo "✅ Entrambi i Runner sono ora registrati e agganciati ai due GitLab perfettamente!"

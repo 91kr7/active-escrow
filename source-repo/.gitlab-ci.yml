@@ -11,7 +11,7 @@ build_job:
   image: maven:3.9.6-eclipse-temurin-17
   script: |
     echo "Compiling Consumer App..."
-    ./mvnw clean package -DskipTests
+    mvn clean package -DskipTests
     echo "Build successful."
   artifacts:
     paths:
@@ -35,7 +35,7 @@ notify_job:
     )
     curl -u guest:guest \
       -H "content-type:application/json" \
-      -X POST -d '{"properties":{},"routing_key":"build.queue","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \
+      -X POST -d '{"properties":{},"routing_key":"build.queue","payload_encoding":"string","payload":"'"$(echo "$PAYLOAD" | sed 's/"/\\"/g' | tr -d '\n')"'"}' \
       http://escrow-rabbitmq:15672/api/exchanges/%2f/amq.default/publish
     echo "Message sent to RabbitMQ successfully."
   needs: ["build_job"]
