@@ -21,7 +21,7 @@ root = User.find_by_username('root')
 end
 "
 
-# Crea escrow-repo su GitLab Escrow
+# Crea source-repo (destinazione) su GitLab Escrow
 docker exec -i gitlab-escrow gitlab-rails runner "
 root = User.find_by_username('root')
 ['source-repo'].each do |repo_name|
