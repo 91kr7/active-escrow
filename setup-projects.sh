@@ -70,9 +70,11 @@ push_repo() {
   
   if [ -d "$REPO_DIR" ]; then
     echo "📍 Pushing $REPO_NAME to GitLab instance port $PORT..."
-    cd "$REPO_DIR" || return
-    # Pulisce vecchi riferimenti git locale per partire puliti
-    rm -rf .git
+    # Lavora su una copia temporanea per non toccare la working dir locale
+    TMP_REPO_DIR=$(mktemp -d "/tmp/${REPO_NAME}.XXXXXX")
+    rsync -a --exclude='.git' "$REPO_DIR/" "$TMP_REPO_DIR/"
+
+    cd "$TMP_REPO_DIR" || return
     git init --quiet
     git add .
     git commit --quiet -m "Initial automated commit for $REPO_NAME"
@@ -85,6 +87,7 @@ push_repo() {
     # Push su gitlab (quiet per evitare la valanga di logs, -u force)
     git push -u origin main
     echo "✅ Successo: $REPO_NAME è su http://127.0.0.1:$PORT/root/$REPO_NAME"
+    rm -rf "$TMP_REPO_DIR"
     cd "$BASE_DIR" || return
   else
     echo "⚠️ Directory $REPO_DIR non trovata, impossibile pushare."
