@@ -20,17 +20,14 @@ root = User.find_by_username('root')
   end
 end
 
-puts '⏳ Creazione Personal Access Token (Glpat-SourceToken)...'
-unless root.personal_access_tokens.find_by_name('mock')
-  token = root.personal_access_tokens.create!(
-    name: 'mock',
-    scopes: ['api', 'read_repository', 'write_repository'],
-    expires_at: 1.year.from_now
-  )
-  token.set_token('Glpat-SourceToken')
-  token.save!
-  puts '-> Token creato con successo su GitLab Source'
-end
+puts '⏳ Impostazione Personal Access Token (Glpat-SourceToken)...'
+token = root.personal_access_tokens.find_or_initialize_by(name: 'mock')
+token.scopes = ['api', 'read_repository', 'write_repository']
+token.expires_at = 1.year.from_now
+token.revoked = false if token.respond_to?(:revoked=)
+token.set_token('Glpat-SourceToken')
+token.save!
+puts '-> Token impostato con successo su GitLab Source'
 "
 
 # Crea escrow-repo su GitLab Escrow
@@ -45,17 +42,14 @@ root = User.find_by_username('root')
   end
 end
 
-puts '⏳ Creazione Personal Access Token (Glpat-EscrowToken)...'
-unless root.personal_access_tokens.find_by_name('mock')
-  token = root.personal_access_tokens.create!(
-    name: 'mock',
-    scopes: ['api', 'read_repository', 'write_repository'],
-    expires_at: 1.year.from_now
-  )
-  token.set_token('Glpat-EscrowToken')
-  token.save!
-  puts '-> Token creato con successo su GitLab Escrow'
-end
+puts '⏳ Impostazione Personal Access Token (Glpat-EscrowToken)...'
+token = root.personal_access_tokens.find_or_initialize_by(name: 'mock')
+token.scopes = ['api', 'read_repository', 'write_repository']
+token.expires_at = 1.year.from_now
+token.revoked = false if token.respond_to?(:revoked=)
+token.set_token('Glpat-EscrowToken')
+token.save!
+puts '-> Token impostato con successo su GitLab Escrow'
 "
 
 echo "--------------------------------------------------------"
