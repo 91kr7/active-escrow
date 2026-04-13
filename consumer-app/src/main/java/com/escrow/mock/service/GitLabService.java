@@ -94,7 +94,8 @@ public class GitLabService {
                     log.info("Provider Pipeline finished successfully.");
                     break;
                 } else if ("failed".equalsIgnoreCase(status) || "canceled".equalsIgnoreCase(status)) {
-                    log.error("Provider Pipeline ended with status: {}", status);
+                    String webUrl = root.has("web_url") ? root.get("web_url").asText() : "N/A";
+                    log.error("Provider Pipeline ended with status: {}. Pipeline URL: {}", status, webUrl);
                     throw new Exception("Provider Pipeline did not succeed. Status: " + status);
                 }
                 // running, pending, created, waiting_for_resource -> keep polling
